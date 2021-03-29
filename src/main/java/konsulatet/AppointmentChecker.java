@@ -2,14 +2,13 @@ package konsulatet;
 
 import static java.util.stream.Collectors.toList;
 
-import com.google.common.util.concurrent.Uninterruptibles;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementClickInterceptedException;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -59,7 +58,11 @@ class AppointmentChecker implements AutoCloseable {
   }
 
   boolean checkappointments(String office) {
-    var wait = new WebDriverWait(driver, 300, 10);
+    var wait =
+        new WebDriverWait(driver, 300, 10)
+            .ignoring(StaleElementReferenceException.class)
+            .ignoring(ElementClickInterceptedException.class)
+            .ignoring(NoSuchElementException.class);
 
     var url = offices.get(office);
     log.debug("opening {} url: {}", office, url);
@@ -77,21 +80,14 @@ class AppointmentChecker implements AutoCloseable {
     log.debug("selecting 1 person");
     selectAntalPersoner.selectByVisibleText("1");
 
-    for (int i = 0; i < 100; i++) {
-      try {
-        log.debug("waiting for continue button");
-        var fortsatt = wait.until(ExpectedConditions.visibilityOfElementLocated(FORTSATT));
-        log.debug("clicking continue button");
-        fortsatt.click();
-        break;
-      } catch (StaleElementReferenceException e) {
-        log.debug("continue button was stale, retrying");
-        Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
-      } catch (ElementClickInterceptedException e) {
-        log.debug("continue button was not yet clickable, retrying");
-        Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
-      }
-    }
+    wait.until(
+        d -> {
+          log.debug("looking for continue button");
+          var fortsatt = driver.findElement(FORTSATT);
+          log.debug("clicking continue button");
+          fortsatt.click();
+          return true;
+        });
 
     log.debug("waiting for booking panel");
     wait.until(ExpectedConditions.visibilityOfElementLocated(TIDSBOKNING_PANEL));
