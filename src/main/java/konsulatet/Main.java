@@ -51,6 +51,7 @@ public class Main implements AutoCloseable {
   private void check0() throws IOException {
     while (!closed) {
       for (String office : appointmentChecker.offices()) {
+        log.info("Checking for appointments at {}", office);
         var maybeAvailable = appointmentChecker.checkappointments(office);
         if (maybeAvailable) {
           log.info("Appointments might be available at {}, notifying!", office);
