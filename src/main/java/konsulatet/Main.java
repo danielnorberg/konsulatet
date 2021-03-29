@@ -9,13 +9,14 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@SuppressWarnings({"InfiniteLoopStatement", "UnstableApiUsage"})
-public class Main {
+@SuppressWarnings({"UnstableApiUsage"})
+public class Main implements AutoCloseable {
 
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   private final SmsSender smsSender;
   private final AppointmentChecker appointmentChecker;
+  private volatile boolean closed;
 
   public Main() {
     this(new SmsSender(), new AppointmentChecker());
@@ -28,15 +29,16 @@ public class Main {
 
   public static void main(String[] args) {
     var checker = new Main();
-    checker.hello();
     checker.check();
   }
 
-  private void hello() {
-    smsSender.sendHello();
+  @Override
+  public void close() {
+    closed = true;
   }
 
   public void check() {
+    smsSender.sendHello();
     try {
       check0();
     } catch (Throwable t) {
@@ -47,13 +49,15 @@ public class Main {
   }
 
   private void check0() throws IOException {
-    while (true) {
-      var maybeAvailable = appointmentChecker.checkappointments();
-      if (maybeAvailable) {
-        log.info("Appointments might be available, notifying!");
-        smsSender.sendSMS("Swedish consulate appts might be available!");
-      } else {
-        log.info("No appointments available");
+    while (!closed) {
+      for (String office : appointmentChecker.offices()) {
+        var maybeAvailable = appointmentChecker.checkappointments(office);
+        if (maybeAvailable) {
+          log.info("Appointments might be available at {}, notifying!", office);
+          smsSender.sendSMS(office, "Appointments might be available at " + office);
+        } else {
+          log.info("No appointments available at {}", office);
+        }
       }
       Uninterruptibles.sleepUninterruptibly(30, TimeUnit.SECONDS);
     }
