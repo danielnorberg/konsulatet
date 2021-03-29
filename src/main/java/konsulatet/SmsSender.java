@@ -41,12 +41,16 @@ class SmsSender {
     if (Files.exists(SMS_SENT_FILE)) {
       var lastSent = Instant.parse(Files.readString(SMS_SENT_FILE).trim());
       if (lastSent.isAfter(now.minus(1, HOURS))) {
-        System.err.printf("Sent notification SMS %s, throttling...%n", lastSent);
+        log.info("Sent notification SMS {}, throttling. Message: {}", lastSent, message);
         return;
       }
     }
     sendSMS0(message);
     Files.writeString(SMS_SENT_FILE, now.toString());
+  }
+
+  void sendCrash(String messageBody) {
+    sendSMS0(messageBody);
   }
 
   private void sendSMS0(String messageBody) {

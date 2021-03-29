@@ -1,5 +1,6 @@
 package konsulatet;
 
+import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.Uninterruptibles;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -39,13 +40,9 @@ public class Main {
     try {
       check0();
     } catch (Throwable t) {
-      try {
-        smsSender.sendSMS("Appt checker crash: " + t);
-      } catch (IOException e) {
-        var re = new RuntimeException(e);
-        re.addSuppressed(t);
-        throw re;
-      }
+      smsSender.sendCrash("Appt checker crash: " + t);
+      Throwables.throwIfUnchecked(t);
+      throw new RuntimeException(t);
     }
   }
 
