@@ -4,7 +4,6 @@ import static java.util.stream.Collectors.toList;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import java.lang.invoke.MethodHandles;
-import java.util.Collection;
 import java.util.Map;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementClickInterceptedException;
@@ -53,8 +52,8 @@ class AppointmentChecker implements AutoCloseable {
     driver.quit();
   }
 
-  Collection<String> offices() {
-    return offices.keySet();
+  Map<String, String> offices() {
+    return offices;
   }
 
   boolean checkappointments(String office) {

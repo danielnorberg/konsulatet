@@ -2,7 +2,6 @@ package konsulatet;
 
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.Uninterruptibles;
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -48,18 +47,22 @@ public class Main implements AutoCloseable {
     }
   }
 
-  private void check0() throws IOException {
+  private void check0() {
     while (!closed) {
-      for (String office : appointmentChecker.offices()) {
-        log.info("Checking for appointments at {}", office);
-        var maybeAvailable = appointmentChecker.checkappointments(office);
-        if (maybeAvailable) {
-          log.info("Appointments might be available at {}, notifying!", office);
-          smsSender.sendSMS(office, "Appointments might be available at " + office);
-        } else {
-          log.info("No appointments available at {}", office);
-        }
-      }
+      appointmentChecker
+          .offices()
+          .forEach(
+              (office, url) -> {
+                log.info("Checking for appointments at {}", office);
+                var maybeAvailable = appointmentChecker.checkappointments(office);
+                if (maybeAvailable) {
+                  log.info("Appointments might be available at {}, notifying!", office);
+                  smsSender.sendSMS(
+                      office, "Appointments might be available at " + office + ", check at " + url);
+                } else {
+                  log.info("No appointments available at {}", office);
+                }
+              });
       Uninterruptibles.sleepUninterruptibly(30, TimeUnit.SECONDS);
     }
   }

@@ -5,8 +5,7 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
-import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -21,7 +20,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class MainTest {
 
-  public static final List<String> OFFICES = List.of("foo", "bar");
+  private static final Map<String, String> OFFICES =
+      Map.of("foo", "http://foo.example.com/", "bar", "http://bar.example.com/");
+
   @Mock SmsSender smsSender;
   @Mock AppointmentChecker appointmentChecker;
 
@@ -30,7 +31,7 @@ public class MainTest {
   private CompletableFuture<Void> f;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     when(appointmentChecker.offices()).thenReturn(OFFICES);
     main = new Main(smsSender, appointmentChecker);
   }
@@ -49,13 +50,14 @@ public class MainTest {
   }
 
   @Test
-  public void shouldSendSmsWhenApptFound() throws IOException {
+  public void shouldSendSmsWhenApptFound() {
     when(appointmentChecker.checkappointments(anyString())).thenReturn(true);
     f = CompletableFuture.runAsync(() -> main.check());
-    for (String office : OFFICES) {
-      verify(smsSender, timeout(30_000).atLeastOnce())
-          .sendSMS(office, "Appointments might be available at " + office);
-    }
+    OFFICES.forEach(
+        (office, url) ->
+            verify(smsSender, timeout(30_000).atLeastOnce())
+                .sendSMS(
+                    office, "Appointments might be available at " + office + ", check at " + url));
   }
 
   @Test

@@ -35,7 +35,7 @@ public class AppointmentCheckerTest {
   @Test
   public void checkappointments() {
     var c = new AppointmentChecker();
-    for (String office : c.offices()) {
+    for (String office : c.offices().keySet()) {
       c.checkappointments(office);
     }
   }
