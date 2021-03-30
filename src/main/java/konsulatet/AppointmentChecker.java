@@ -34,17 +34,25 @@ class AppointmentChecker implements AutoCloseable {
   private static final Map<String, String> offices =
       Map.of(
           KONSULATET_NYC,
-              "https://www.migrationsverket.se/ansokanbokning/valjtyp?51&enhet=U0766&sprak=sv&callback=https:/swedenabroad.se/en/about-abroad-for-swedish-citizens/usa/service-for-swedish-citizens/passports/passports-for-adults/",
+              "https://www.migrationsverket.se/ansokanbokning/valjtyp?enhet=U0766&sprak=en",
           AMBASSADEN_DC,
-              "https://www.migrationsverket.se/ansokanbokning/valjtyp?5&enhet=U1075&sprak=sv&callback=http://www.swedenabroad.com/en-GB/Embassies/Washington/Services-for-Swedes/Passport-Applications-and-Name-Registration/");
+              "https://www.migrationsverket.se/ansokanbokning/valjtyp?enhet=U1075&sprak=en");
 
   private final WebDriver driver;
 
   AppointmentChecker() {
+    this(createDriver());
+  }
+
+  static ChromeDriver createDriver() {
     WebDriverManager.chromedriver().setup();
     ChromeOptions options = new ChromeOptions();
     options.addArguments("--headless");
-    driver = new ChromeDriver(options);
+    return new ChromeDriver(options);
+  }
+
+  public AppointmentChecker(WebDriver driver) {
+    this.driver = driver;
   }
 
   @Override
@@ -71,7 +79,7 @@ class AppointmentChecker implements AutoCloseable {
     var viseringsTyp = wait.until(ExpectedConditions.visibilityOfElementLocated(VISERINGSTYP));
     var selectViseringsTyp = new Select(viseringsTyp);
     log.debug("selecting passport visit");
-    selectViseringsTyp.selectByVisibleText("ansöka om svenskt pass/id-handlingar");
+    selectViseringsTyp.selectByVisibleText("apply for Swedish passport or id document");
 
     log.debug("waiting for nr of persons selector");
     var antalPersoner = wait.until(ExpectedConditions.visibilityOfElementLocated(ANTALPERSONER));
@@ -100,7 +108,7 @@ class AppointmentChecker implements AutoCloseable {
     var errorMessages = errors.stream().map(WebElement::getText).collect(toList());
     log.debug("found appointment errors: {}", errorMessages);
     var foundNoMoreSlotsError =
-        errorMessages.stream().anyMatch(m -> m.contains("inga mer lediga tider"));
+        errorMessages.stream().anyMatch(m -> m.contains("no available time slots"));
 
     if (!foundNoMoreSlotsError) {
       log.debug("did not find no more slots error, maybe success?");

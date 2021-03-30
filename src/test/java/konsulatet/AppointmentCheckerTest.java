@@ -1,13 +1,15 @@
 package konsulatet;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
+import java.lang.invoke.MethodHandles;
 import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AppointmentCheckerTest {
+
+  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   @BeforeClass
   public static void beforeClass() {
@@ -16,10 +18,7 @@ public class AppointmentCheckerTest {
 
   private static boolean seleniumConfigured() {
     try {
-      WebDriverManager.chromedriver().setup();
-      ChromeOptions options = new ChromeOptions();
-      options.addArguments("--headless");
-      var driver = new ChromeDriver(options);
+      var driver = AppointmentChecker.createDriver();
       try {
         driver.get("https://www.google.com/");
         driver.close();
@@ -36,7 +35,8 @@ public class AppointmentCheckerTest {
   public void checkappointments() {
     var c = new AppointmentChecker();
     for (String office : c.offices().keySet()) {
-      c.checkappointments(office);
+      var available = c.checkappointments(office);
+      log.info("office appts available: {}", available);
     }
   }
 }
