@@ -13,3 +13,7 @@ Selenium script to scrape for Swedish consulate passport renewal appointments
 * `TWILIO_NUMBER` should be your assigned Twilio phone number.
 * `NOTIFICATION_NUMBERS` Can be one or more comma separated numbers to send SMS to. Note that the numbers must be verified in your Twilio account.
 
+## Note
+
+* The application checks for open appointments in both the Washington DC Embassy and the NYC Consulate.
+* SMS are throttled to not notify more than once an hour for either embassy or consulate. To clear the throttle: `rm -rf sms-sent`.
