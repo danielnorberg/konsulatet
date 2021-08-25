@@ -27,6 +27,8 @@ class AppointmentChecker implements AutoCloseable {
   private static final By ANTALPERSONER = By.id("antalpersoner");
   private static final By FORTSATT = By.name("fortsatt");
   private static final By TIDSBOKNING_PANEL = By.className("tidsbokningPanel");
+  // There is no semantic queryable name for this checkbox (the id is "id1")
+  private static final By KORREKT_AMBASSAD = By.name("control.panel:control.checkbox");
 
   public static final String KONSULATET_NYC = "konsulatet-nyc";
   public static final String AMBASSADEN_DC = "ambassaden-dc";
@@ -86,6 +88,15 @@ class AppointmentChecker implements AutoCloseable {
     var selectAntalPersoner = new Select(antalPersoner);
     log.debug("selecting 1 person");
     selectAntalPersoner.selectByVisibleText("1");
+
+    wait.until(
+        d -> {
+          log.debug("waiting for correct embassy checkbox");
+          var korrektAmbassad = driver.findElement(KORREKT_AMBASSAD);
+          log.debug("selecting that this is the correct embassy");
+          korrektAmbassad.click();
+          return true;
+        });
 
     wait.until(
         d -> {
