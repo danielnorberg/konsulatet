@@ -36,9 +36,7 @@ class AppointmentChecker implements AutoCloseable {
   private static final Map<String, String> offices =
       Map.of(
           KONSULATET_NYC,
-              "https://www.migrationsverket.se/ansokanbokning/valjtyp?enhet=U0766&sprak=en",
-          AMBASSADEN_DC,
-              "https://www.migrationsverket.se/ansokanbokning/valjtyp?enhet=U1075&sprak=en");
+          "https://www.migrationsverket.se/ansokanbokning/valjtyp?enhet=U0766&sprak=en");
 
   private final WebDriver driver;
 
