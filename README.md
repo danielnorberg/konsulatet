@@ -3,16 +3,16 @@ Selenium script to scrape for Swedish consulate passport renewal appointments
 
 ## Usage
 
-1. Get a https://www.twilio.com/ trial account, get a twilio phone number & verify the phone number you want to send sms to
+1. Get a [Sinch](https://www.sinch.com) trial account, get a Sinch phone number & verify the phone number you want to send sms to
 2. `brew install maven` (if you don’t have maven + java)
 3. `git clone git@github.com:danielnorberg/konsulatet.git`
 4. `cd konsulatet`
-5. `TWILIO_SID=badf00d TWILIO_TOKEN=badf00d NOTIFICATION_NUMBERS=+12222222222,+13333333333 TWILIO_NUMBER=+14444444444 ./run.sh`
+5. `SINCH_PLAN_ID=badf00d SINCH_TOKEN=badf00d RECIPIENTS_NUMBERS=+12222222222,+13333333333 SENDER_NUMBER=+14444444444 ./run.sh`
 6. Verify that you get the hello world SMS on startup, otherwise something is wrong and you might not get any notifications for appointments.
 
-* The `TWILIO_SID`, `TWILIO_TOKEN` env vars should be set to your twilio SID and auth token.
-* `TWILIO_NUMBER` should be your assigned Twilio phone number.
-* `NOTIFICATION_NUMBERS` Can be one or more comma separated numbers to send SMS to. Note that the numbers must be verified in your Twilio account.
+* The `SINCH_PLAN_ID`, `SINCH_TOKEN` env vars should be set to your Sinch plan ID and auth token.
+* `SENDER_NUMBER` should be your assigned Sinch phone number that will send the SMS.
+* `RECIPIENTS_NUMBERS` Can be one or more comma separated numbers to send an SMS to. Note that the numbers must be verified in your Sinch account.
 
 ## Note
 
