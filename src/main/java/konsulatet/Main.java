@@ -54,12 +54,16 @@ public class Main implements AutoCloseable {
           .forEach(
               (office, url) -> {
                 log.info("Checking for appointments at {}", office);
-                var maybeAvailable = appointmentChecker.checkappointments(office);
-                if (maybeAvailable) {
-                  log.info("Appointments might be available at {}, notifying!", office);
-                  smsSender.sendSMS(
-                      office, "Appointments might be available at " + office + ", check at " + url);
-                } else {
+                try {
+                  var maybeAvailable = appointmentChecker.checkappointments(office);
+                  if (maybeAvailable) {
+                    log.info("Appointments might be available at {}, notifying!", office);
+                    smsSender.sendSMS(
+                        office, "Appointments might be available at " + office + ", check at " + url);
+                  } else {
+                    log.info("No appointments available at {}", office);
+                  }
+                } catch (Exception exception) {
                   log.info("No appointments available at {}", office);
                 }
               });

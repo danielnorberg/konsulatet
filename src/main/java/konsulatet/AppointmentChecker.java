@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toList;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import java.lang.invoke.MethodHandles;
+import java.time.Duration;
 import java.util.Map;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementClickInterceptedException;
@@ -68,7 +69,7 @@ class AppointmentChecker implements AutoCloseable {
 
   boolean checkappointments(String office) {
     var wait =
-        new WebDriverWait(driver, 300, 10)
+        new WebDriverWait(driver, Duration.ofSeconds(300), Duration.ofSeconds(10))
             .ignoring(StaleElementReferenceException.class)
             .ignoring(ElementClickInterceptedException.class)
             .ignoring(NoSuchElementException.class);

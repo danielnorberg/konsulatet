@@ -5,14 +5,13 @@ import static java.time.temporal.ChronoUnit.HOURS;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.twilio.Twilio;
-import com.twilio.rest.api.v2010.account.Message;
-import com.twilio.type.PhoneNumber;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import com.sinch.xms.*;
+import com.sinch.xms.api.*;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Stream;
@@ -26,24 +25,30 @@ class SmsSender {
 
   private static final Path SMS_SENT_DIR = Paths.get("sms-sent");
 
-  private static final String ACCOUNT_SID = System.getenv("TWILIO_SID");
-  private static final String AUTH_TOKEN = System.getenv("TWILIO_TOKEN");
+  private static final String ACCOUNT_ID = System.getenv("SINCH_PLAN_ID");
+  private static final String AUTH_TOKEN = System.getenv("SINCH_TOKEN");
 
-  private static final List<String> NOTIFICATION_NUMBERS =
+  private static final List<String> RECIPIENTS_NUMBERS =
       Splitter.on(',')
           .trimResults()
           .omitEmptyStrings()
-          .splitToList(System.getenv().getOrDefault("NOTIFICATION_NUMBERS", ""));
-  private static final String TWILIO_NUMBER = System.getenv("TWILIO_NUMBER");
+          .splitToList(System.getenv().getOrDefault("RECIPIENTS_NUMBERS", ""));
+  private static final String SENDER_NUMBER = System.getenv("SENDER_NUMBER");
+
+  private final ApiConnection sinchConnection;
 
   static boolean isConfigured() {
-    return Stream.of(ACCOUNT_SID, AUTH_TOKEN, TWILIO_NUMBER).noneMatch(Strings::isNullOrEmpty)
-        && !NOTIFICATION_NUMBERS.isEmpty();
+    return Stream.of(ACCOUNT_ID, AUTH_TOKEN, SENDER_NUMBER).noneMatch(Strings::isNullOrEmpty)
+        && !RECIPIENTS_NUMBERS.isEmpty();
   }
 
   SmsSender() {
     Preconditions.checkState(isConfigured(), "not configured, please set env vars");
-    Twilio.init(ACCOUNT_SID, AUTH_TOKEN);
+    this.sinchConnection = ApiConnection
+                .builder()
+                .servicePlanId(ACCOUNT_ID)
+                .token(AUTH_TOKEN)
+                .start();
   }
 
   void sendSMS(String key, String message) {
@@ -70,14 +75,21 @@ class SmsSender {
   }
 
   private void sendSMS0(String messageBody) {
-    for (String notificationNumber : NOTIFICATION_NUMBERS) {
-      Message message =
-          Message.creator(
-                  new PhoneNumber(notificationNumber), // to
-                  new PhoneNumber(TWILIO_NUMBER), // from
-                  messageBody)
-              .create();
-      log.info("Sent message to {}: {}", notificationNumber, message);
+    for (String notificationNumber : RECIPIENTS_NUMBERS) {
+      MtBatchTextSmsCreate message =
+          SinchSMSApi
+              .batchTextSms()
+              .sender(SENDER_NUMBER)
+              .addRecipient(notificationNumber)
+              .body(messageBody)
+              .build();
+
+      try {
+        MtBatchTextSmsResult batch = sinchConnection.createBatch(message);
+        log.info("Sent message to {}: {}", notificationNumber, message);
+      } catch (Exception e) {
+        log.error("Failed to send message to {}: {}\nDue to error: {}", notificationNumber, message, e.getMessage());
+      }
     }
   }
 
